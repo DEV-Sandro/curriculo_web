@@ -1,0 +1,706 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>SandroOS v5.5 | Command Center do Arquiteto</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;700&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap');
+        
+        :root { --p: #0ea5e9; --s: #10b981; --e: #f43f5e; --bg: #020617; }
+        body { background: var(--bg); color: #e2e8f0; font-family: 'JetBrains Mono', monospace; overflow: hidden; -webkit-tap-highlight-color: transparent; }
+        
+        /* Scanlines & CRT */
+        .crt::before { content: " "; display: block; position: fixed; top: 0; left: 0; bottom: 0; right: 0; background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.1) 50%), linear-gradient(90deg, rgba(255, 0, 0, 0.02), rgba(0, 255, 0, 0.01), rgba(0, 0, 255, 0.02)); z-index: 1000; background-size: 100% 3px, 3px 100%; pointer-events: none; }
+        
+        .screen { display: none; height: 100vh; width: 100%; padding: 1.5rem; flex-direction: column; justify-content: center; align-items: center; position: relative; overflow-y: auto; }
+        .screen.active { display: flex; animation: slideUp 0.5s cubic-bezier(0.16, 1, 0.3, 1); }
+        @keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+
+        .glass { background: rgba(15, 23, 42, 0.7); border: 1px solid rgba(14, 165, 233, 0.2); backdrop-filter: blur(10px); border-radius: 4px; box-shadow: 0 0 40px rgba(0, 0, 0, 0.6); }
+        .btn-os { background: rgba(14, 165, 233, 0.05); border: 1px solid var(--p); padding: 0.8rem 1.5rem; transition: 0.3s; text-transform: uppercase; font-weight: 700; font-size: 0.75rem; letter-spacing: 2px; display: flex; align-items: center; gap: 10px; cursor: pointer; position: relative; overflow: hidden; }
+        .btn-os:hover:not(:disabled) { background: var(--p); color: #000; box-shadow: 0 0 20px var(--p); }
+        .btn-os:active:not(:disabled) { transform: scale(0.95); }
+        .btn-os:disabled { opacity: 0.3; cursor: not-allowed; filter: grayscale(1); border-color: #475569; color: #94a3b8; }
+
+        .progress-fixed { position: fixed; top: 0; left: 0; width: 100%; height: 2px; background: rgba(14, 165, 233, 0.1); z-index: 1100; }
+        #progress-val { height: 100%; background: var(--p); width: 0%; transition: 0.6s cubic-bezier(0.16, 1, 0.3, 1); box-shadow: 0 0 15px var(--p); }
+
+        .shake { animation: shake 0.4s; }
+        @keyframes shake { 0%, 100% { transform: translateX(0); } 25% { transform: translateX(-5px); } 75% { transform: translateX(5px); } }
+        
+        @keyframes pulse-glow {
+            0% { box-shadow: 0 0 5px var(--s); border-color: var(--s); color: var(--s); }
+            50% { box-shadow: 0 0 25px var(--s), inset 0 0 10px var(--s); border-color: #34d399; color: #34d399; }
+            100% { box-shadow: 0 0 5px var(--s); border-color: var(--s); color: var(--s); }
+        }
+        .btn-unlocked { animation: pulse-glow 1.5s infinite !important; border-color: var(--s) !important; color: var(--s) !important; background: rgba(16, 185, 129, 0.05) !important; }
+        .btn-unlocked:hover { background: var(--s) !important; color: #000 !important; }
+
+        @media (max-width: 640px) { h1 { font-size: 1.5rem !important; } .glass { padding: 1rem !important; } }
+
+        /* MAGIA DE IMPRESSÃO: Esconde o jogo e imprime um CV real ATS-Friendly */
+        @media screen { #printable-cv { display: none; } }
+        @media print {
+            @page { margin: 0; }
+            body { background: white !important; color: black !important; overflow: auto !important; }
+            .crt::before, .progress-fixed, .screen { display: none !important; }
+            #printable-cv { display: block !important; position: static; width: 100%; padding: 1.5cm; font-family: 'Inter', sans-serif; }
+            #printable-cv * { visibility: visible; }
+        }
+    </style>
+</head>
+<body class="crt">
+
+    <div id="printable-cv">
+        <h1 style="font-size: 24pt; font-weight: 700; color: #111; margin: 0; text-transform: uppercase;">Sandro Sousa dos Anjos</h1>
+        <h2 style="font-size: 12pt; color: #0284c7; margin-top: 5px; text-transform: uppercase; font-weight: 700;">Arquiteto de Soluções RPA | Intelligent Automation Specialist</h2>
+        <div style="font-size: 10pt; color: #4b5563; margin-top: 10px; margin-bottom: 20px;">
+            📍 Francisco Beltrão, PR (Remoto / Híbrido) | 📞 (93) 98416-2285 | 📧 sandrosousa094@gmail.com | 🔗 linkedin.com/in/dev-sandro-sousa
+        </div>
+        
+        <h3 style="font-size: 11pt; color: #0284c7; border-bottom: 2px solid #e5e7eb; padding-bottom: 4px; margin-bottom: 10px; text-transform: uppercase; font-weight: 700;">Perfil Profissional</h3>
+        <p style="font-size: 10pt; color: #374151; line-height: 1.6; margin-bottom: 20px;">Especialista em Automação Inteligente com sólida trajetória em arquitetura e desenvolvimento de soluções RPA (UiPath). Expert em governança de automação, integração de APIs e análise de dados. MBA em Data Science pela USP, focado em unir Engenharia de Processos com Inteligência Artificial para maximizar o ROI organizacional.</p>
+        
+        <h3 style="font-size: 11pt; color: #0284c7; border-bottom: 2px solid #e5e7eb; padding-bottom: 4px; margin-bottom: 10px; text-transform: uppercase; font-weight: 700;">Habilidades Técnicas</h3>
+        <ul style="font-size: 10pt; color: #374151; line-height: 1.6; margin-bottom: 20px; padding-left: 20px;">
+            <li><strong>Arquitetura & RPA:</strong> UiPath (Studio, Orchestrator, Gov), BPMN, PDD, SDD, Fluid Now, DocuSign.</li>
+            <li><strong>Dados & Analytics:</strong> Python, SQL, Regex, Looker Studio (Dashboards de ROI), Machine Learning.</li>
+            <li><strong>Desenvolvimento & Integração:</strong> APIs REST, JSON, JavaScript, HTML, CSS, Java, C#, VBA.</li>
+        </ul>
+
+        <h3 style="font-size: 11pt; color: #0284c7; border-bottom: 2px solid #e5e7eb; padding-bottom: 4px; margin-bottom: 15px; text-transform: uppercase; font-weight: 700;">Experiência Profissional</h3>
+        <div style="margin-bottom: 15px;">
+            <div style="display: flex; justify-content: space-between; font-weight: 700; font-size: 10pt; color: #111;">
+                <span>Cresol Confederação | Arquiteto e Desenvolvedor RPA II</span>
+                <span>Out 2023 – Atual</span>
+            </div>
+            <ul style="font-size: 10pt; color: #374151; line-height: 1.6; padding-left: 20px; margin-top: 5px;">
+                <li>Arquitetura de Soluções: Definição de padrões técnicos, governança e boas práticas para o time de automação.</li>
+                <li>Gestão completa da infraestrutura no UiPath Orchestrator e construção de indicadores de ROI no Looker Studio.</li>
+                <li>Otimização de rotinas críticas com Python, JavaScript e integração via APIs.</li>
+            </ul>
+        </div>
+        <div style="margin-bottom: 20px;">
+            <div style="display: flex; justify-content: space-between; font-weight: 700; font-size: 10pt; color: #111;">
+                <span>Sicredi | Desenvolvedor RPA</span>
+                <span>Abr 2022 – Out 2023</span>
+            </div>
+            <ul style="font-size: 10pt; color: #374151; line-height: 1.6; padding-left: 20px; margin-top: 5px;">
+                <li>Desenvolvimento e manutenção de workflows RPA end-to-end integrando UiPath, Fluid Now e DocuSign.</li>
+                <li>Mapeamento de processos e elaboração de documentação técnica (PDD).</li>
+            </ul>
+        </div>
+
+        <h3 style="font-size: 11pt; color: #0284c7; border-bottom: 2px solid #e5e7eb; padding-bottom: 4px; margin-bottom: 10px; text-transform: uppercase; font-weight: 700;">Formação Acadêmica</h3>
+        <p style="font-size: 10pt; color: #374151; margin-bottom: 5px;"><strong>MBA em Data Science & Analytics</strong><br>Universidade de São Paulo (USP) | 2022 – 2024</p>
+        <p style="font-size: 10pt; color: #374151; margin-bottom: 20px;"><strong>Tecnólogo em Análise e Desenvolvimento de Sistemas</strong><br>UNIPAR | 2019 – 2022</p>
+    </div>
+    <div class="progress-fixed"><div id="progress-val"></div></div>
+
+    <section id="boot" class="screen active">
+        <div class="w-full max-w-lg glass p-6 text-[10px] md:text-xs">
+            <div id="boot-log" class="text-sky-400 space-y-1"></div>
+        </div>
+        <button id="btn-start" class="btn-os mt-10 hidden justify-center w-full max-w-lg">Iniciando...</button>
+    </section>
+
+    <section id="intro" class="screen">
+        <header class="text-center mb-8">
+            <div class="inline-block px-3 py-1 border border-sky-500/50 text-[10px] uppercase tracking-widest text-sky-400 mb-4">Acesso Liberado: Arquiteto de Soluções</div>
+            <h1 class="text-3xl md:text-5xl font-bold tracking-tighter mb-2">SANDRO SOUSA DOS ANJOS</h1>
+            <p class="text-slate-400 text-xs md:text-sm max-w-md mx-auto">Especialista em Automação Inteligente & Arquiteto de Soluções RPA.</p>
+        </header>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 max-w-3xl w-full">
+            <div class="glass p-4">
+                <h3 class="text-sky-400 font-bold text-xs mb-2">NÚCLEO ACADÊMICO</h3>
+                <p class="text-[11px] text-slate-300">MBA Data Science - <strong>USP</strong></p>
+                <p class="text-[11px] text-slate-300">Análise de Sistemas - <strong>UNIPAR</strong></p>
+            </div>
+            <div class="glass p-4">
+                <h3 class="text-sky-400 font-bold text-xs mb-2">STACK ATUAL</h3>
+                <p class="text-[11px] text-slate-300">UiPath Enterprise, Python, SQL, APIs</p>
+            </div>
+        </div>
+        <button onclick="nav('roi')" class="btn-os mt-10">Explorar Impacto de ROI <i data-lucide="trending-up"></i></button>
+    </section>
+
+    <section id="roi" class="screen">
+        <h2 class="text-xl font-bold mb-8 flex items-center gap-2"><i data-lucide="cpu"></i> Otimização Operacional</h2>
+        <div class="glass p-8 w-full max-w-sm text-center">
+            <p class="text-[10px] text-slate-500 uppercase mb-2">ROI Projetado (Manual vs Automatizado)</p>
+            <div id="roi-val" class="text-4xl font-bold text-emerald-400 mb-8">R$ 0,00</div>
+            <button id="roi-trigger" class="btn-os w-full justify-center">EXECUTAR SCRIPT DE AUTOMAÇÃO</button>
+            <div class="w-full bg-slate-800 h-1 mt-6 rounded-full overflow-hidden">
+                <div id="roi-bar" class="bg-emerald-500 h-full w-0 transition-all"></div>
+            </div>
+        </div>
+        <button id="roi-next" onclick="nav('quiz')" class="btn-os mt-10 hidden justify-center w-full max-w-sm"></button>
+    </section>
+
+    <section id="quiz" class="screen">
+        <div class="w-full max-w-lg glass p-8 relative overflow-hidden">
+            <div id="quiz-timer" class="absolute top-0 left-0 h-1 bg-sky-500 transition-all duration-100"></div>
+            <div class="flex justify-between items-center mb-8">
+                <span id="quiz-step" class="text-[10px] text-sky-500 font-bold">ETAPA 01</span>
+                <span id="quiz-points" class="text-[10px] text-slate-500">PONTOS: 0000</span>
+            </div>
+            <h3 id="quiz-q" class="text-sm md:text-base font-bold mb-8 leading-relaxed"></h3>
+            <div id="quiz-opts" class="grid grid-cols-1 gap-3"></div>
+            <button id="quiz-next" onclick="nav('uipath')" class="btn-os mt-8 hidden justify-center w-full"></button>
+        </div>
+    </section>
+
+    <section id="uipath" class="screen">
+        <h2 class="text-lg font-bold mb-8 flex items-center gap-2 uppercase tracking-widest"><i data-lucide="workflow"></i> Workflow UiPath</h2>
+        <div class="glass p-6 w-full max-w-xl h-64 flex flex-col items-center justify-center relative overflow-hidden">
+            <div class="flex flex-col items-center gap-3 w-full">
+                <div id="node-1" class="border border-sky-500/20 p-2 text-[10px] rounded text-slate-500 w-48 text-center transition-all duration-300">Ler Arquivo de Configuração</div>
+                <div id="line-1" class="w-px h-6 bg-sky-500/30 transition-all duration-300"></div>
+                <div id="node-2" class="border border-sky-500/20 p-2 text-[10px] rounded text-slate-500 w-48 text-center transition-all duration-300">Init: Abrir Aplicações</div>
+                <div id="line-2" class="w-px h-6 bg-sky-500/30 transition-all duration-300"></div>
+                <div id="node-3" class="border border-sky-500/20 p-2 text-[10px] rounded text-slate-500 w-48 text-center transition-all duration-300">Extração de Dados (Scraping)</div>
+            </div>
+        </div>
+        <button id="btn-uipath-next" onclick="nav('api')" class="btn-os mt-10 hidden justify-center w-full max-w-sm"></button>
+    </section>
+
+    <section id="api" class="screen">
+        <h2 class="text-lg font-bold mb-8 uppercase tracking-widest">Integração REST API</h2>
+        <div class="glass p-4 w-full max-w-2xl font-mono text-[10px] h-72 overflow-y-auto overflow-x-hidden relative" id="api-container">
+            <div class="flex justify-between border-b border-slate-800 pb-2 mb-2 sticky top-0 bg-[#0f172a] z-10">
+                <span class="text-emerald-500">REQUEST: POST /v1/orchestrator/jobs</span>
+                <span class="text-slate-500" id="api-status">EXECUTANDO...</span>
+            </div>
+            <div id="api-log" class="text-slate-400 space-y-1"></div>
+        </div>
+        <button id="btn-api-next" onclick="nav('sql')" class="btn-os mt-10 hidden justify-center w-full max-w-sm"></button>
+    </section>
+
+    <section id="sql" class="screen">
+        <h2 class="text-lg font-bold mb-8 uppercase tracking-widest">BigQuery & BI em Tempo Real</h2>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 w-full max-w-4xl">
+            <div class="glass p-4 h-48 overflow-hidden font-mono text-[9px]">
+                <p class="text-sky-500 mb-2 font-bold">STREAMS TB_ROI_ANALYTICS</p>
+                <div id="sql-log" class="space-y-1"></div>
+            </div>
+            <div class="glass p-6 flex flex-col items-center justify-center h-48">
+                <div class="flex items-end gap-2 h-24 mb-4">
+                    <div class="w-6 bg-sky-600 h-[20%] animate-pulse"></div>
+                    <div class="w-6 bg-sky-600 h-[50%] animate-pulse" style="animation-delay: 0.1s"></div>
+                    <div class="w-6 bg-sky-600 h-[80%] animate-pulse" style="animation-delay: 0.2s"></div>
+                    <div class="w-6 bg-emerald-500 h-[100%]"></div>
+                </div>
+                <p class="text-[10px] font-bold text-sky-400">Eficiência de Automação: 99.4%</p>
+            </div>
+        </div>
+        <button id="btn-sql-next" onclick="nav('history')" class="btn-os mt-8 hidden justify-center w-full max-w-sm"></button>
+    </section>
+
+    <section id="history" class="screen">
+        <h2 class="text-xl font-bold mb-10 uppercase tracking-[0.3em]">Timeline de Operações</h2>
+        <div class="w-full max-w-2xl space-y-4">
+            <div class="glass p-5 border-l-4 border-l-sky-500">
+                <div class="flex justify-between text-[10px] text-slate-500 mb-1"><span>CRESOL CONFEDERAÇÃO</span><span>2023 - ATUAL</span></div>
+                <p class="text-xs font-bold text-sky-400 uppercase">Arquiteto & Dev RPA II</p>
+                <p class="text-[10px] text-slate-400 mt-2">Arquitetura de soluções complexas, gestão de Orchestrator e governança RPA.</p>
+            </div>
+            <div class="glass p-5 border-l-4 border-l-slate-700 opacity-60">
+                <div class="flex justify-between text-[10px] text-slate-500 mb-1"><span>SICREDI PROGRESSO</span><span>2022 - 2023</span></div>
+                <p class="text-xs font-bold text-slate-300">Desenvolvedor RPA</p>
+            </div>
+        </div>
+        <button onclick="nav('contact')" class="btn-os mt-10">Protocolo de Desbloqueio <i data-lucide="lock"></i></button>
+    </section>
+
+    <section id="contact" class="screen">
+        <div class="text-center">
+            <div id="lock-icon" class="mb-6 mx-auto w-16 h-16 text-sky-500 animate-pulse"><i data-lucide="lock"></i></div>
+            <h2 class="text-2xl font-bold mb-10 tracking-widest">ACESSO CRIPTOGRAFADO</h2>
+            <button id="btn-decrypt" class="btn-os mx-auto text-emerald-400 border-emerald-500">INJETAR CHAVE DE DECRIPTOGRAFIA</button>
+        </div>
+    </section>
+
+    <section id="final" class="screen">
+        <h2 class="text-2xl font-bold mb-4 text-emerald-400 glow uppercase">Conexão Estabelecida</h2>
+        <p class="text-[10px] text-slate-400 mb-10 uppercase tracking-widest">Aberto para novas Missões // Remoto ou Híbrido</p>
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 w-full max-w-md">
+            <a href="https://br.linkedin.com/in/dev-sandro-sousa" target="_blank" class="btn-os justify-center"><i data-lucide="linkedin"></i> LinkedIn</a>
+            <a href="mailto:sandrosousa094@gmail.com" class="btn-os justify-center"><i data-lucide="mail"></i> Email</a>
+            <a href="https://wa.me/5593984162285" target="_blank" class="btn-os justify-center border-emerald-500"><i data-lucide="message-circle"></i> WhatsApp</a>
+            <button onclick="window.print()" class="btn-os justify-center"><i data-lucide="file-text"></i> Export Dossier</button>
+        </div>
+        <div class="mt-16 glass p-6 text-center w-full max-w-sm">
+            <h3 class="text-xs font-bold mb-4">DESAFIO DO RANKING</h3>
+            <p class="text-[9px] text-slate-500 mb-6 uppercase">Prove que você não é um robô. Responda o quiz final.</p>
+            <button onclick="nav('challenge')" class="btn-os mx-auto bg-sky-500 text-black">INICIAR MISSÃO DIVERTIDA <i data-lucide="zap"></i></button>
+        </div>
+    </section>
+
+    <section id="challenge" class="screen">
+        <div id="chal-intro" class="w-full max-w-md glass p-8">
+            <h2 class="text-xl font-bold mb-8 uppercase tracking-widest">Entrada no Ranking Global</h2>
+            <input type="text" id="player-name" placeholder="ID / Nome do Recrutador" class="w-full bg-slate-900 border border-slate-800 p-4 mb-6 outline-none focus:border-sky-500 text-xs uppercase">
+            <button onclick="startMission()" class="btn-os w-full justify-center">INICIAR MISSÃO NEURAL</button>
+        </div>
+        <div id="chal-play" class="hidden w-full max-w-md glass p-8 relative overflow-hidden">
+            <div id="chal-timer-bar" class="absolute top-0 left-0 h-1 bg-emerald-500 w-full"></div>
+            <div class="flex justify-between items-center mb-8">
+                <span class="text-[9px] text-emerald-500 font-bold uppercase" id="chal-q-id">MISSÃO 01</span>
+                <span class="text-[9px] text-slate-500 font-bold" id="chal-score">PONTOS: 0</span>
+            </div>
+            <h3 id="chal-q" class="text-sm font-bold mb-10 leading-relaxed"></h3>
+            <div id="chal-opts" class="grid grid-cols-1 gap-3"></div>
+        </div>
+    </section>
+
+    <section id="ranking" class="screen">
+        <h2 class="text-2xl font-bold mb-10 text-sky-400 glow uppercase tracking-tighter">Ranking dos Analistas</h2>
+        <div class="w-full max-w-md glass p-8">
+            <div id="leader-list" class="space-y-3 mb-10"></div>
+            <button onclick="nav('final')" class="btn-os w-full justify-center">VOLTAR AO CENTRO DE COMANDO</button>
+        </div>
+    </section>
+
+    <script>
+        // AUDIO ENGINE
+        const audio = new (window.AudioContext || window.webkitAudioContext)();
+        function beep(f, t='sine', d=0.1, v=0.05) {
+            const o = audio.createOscillator(), g = audio.createGain();
+            o.type = t; o.frequency.setValueAtTime(f, audio.currentTime);
+            g.gain.setValueAtTime(v, audio.currentTime);
+            g.gain.exponentialRampToValueAtTime(0.01, audio.currentTime + d);
+            o.connect(g); g.connect(audio.destination);
+            o.start(); o.stop(audio.currentTime + d);
+        }
+
+        // NAVIGATION
+        const screens = ['boot', 'intro', 'roi', 'quiz', 'uipath', 'api', 'sql', 'history', 'contact', 'final', 'challenge', 'ranking'];
+        let uipathInterval, apiInterval, sqlInterval;
+
+        function nav(id) {
+            document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+            const el = document.getElementById(id);
+            el.classList.add('active');
+            const idx = screens.indexOf(id);
+            document.getElementById('progress-val').style.width = `${((idx+1)/screens.length)*100}%`;
+            beep(400 + idx*50);
+            window.scrollTo(0,0);
+            
+            if(id === 'quiz') initQuiz();
+            if(id === 'uipath') startUiPathAnim();
+            if(id === 'api') startApiLog();
+            if(id === 'sql') startSqlLog();
+        }
+
+        // BOOT LOGIC
+        const logs = [
+            "Inicializando SandroOS Kernel...", "Carregando Módulos RPA... [OK]", 
+            "Conectando ao banco neural da USP... [OK]", "Injetando Conector BigQuery... [OK]",
+            "Ativando Portais de Segurança...", "STATUS DO SISTEMA: SEGURO."
+        ];
+        let li = 0;
+        function typeBoot() {
+            if(li < logs.length) {
+                document.getElementById('boot-log').innerHTML += `> ${logs[li]}<br>`;
+                li++; beep(200 + li*100, 'square', 0.05);
+                setTimeout(typeBoot, 400);
+            } else { 
+                const btn = document.getElementById('btn-start');
+                btn.classList.remove('hidden'); 
+                btn.classList.add('btn-unlocked');
+                btn.innerHTML = 'SISTEMA CARREGADO - INICIAR <i data-lucide="play"></i>';
+                lucide.createIcons();
+            }
+        }
+        typeBoot();
+        document.getElementById('btn-start').onclick = () => nav('intro');
+
+        // ROI SIMULATOR
+        let roi = 0;
+        document.getElementById('roi-trigger').onclick = function() {
+            if(roi < 100000) {
+                roi += 25000;
+                document.getElementById('roi-val').innerText = `R$ ${roi.toLocaleString('pt-BR')}`;
+                document.getElementById('roi-bar').style.width = `${(roi/100000)*100}%`;
+                beep(800, 'sine', 0.1, 0.1);
+                
+                if(roi >= 100000) {
+                    this.disabled = true; 
+                    this.innerText = "Meta de ROI Alcançada!";
+                    const nextBtn = document.getElementById('roi-next');
+                    nextBtn.classList.remove('hidden');
+                    nextBtn.classList.add('btn-unlocked');
+                    nextBtn.innerHTML = 'PROCESSO CONCLUÍDO - AVANÇAR <i data-lucide="arrow-right"></i>';
+                    lucide.createIcons();
+                }
+            }
+        };
+
+        // QUIZ SYSTEM TÉCNICO
+        const qData = [
+            {q: "Qual ferramenta principal Sandro usa como Arquiteto?", a: ["UiPath", "Excel", "Photoshop"], c: 0},
+            {q: "Onde o Sandro finalizou seu MBA em Data Science?", a: ["USP", "MIT", "Coursera"], c: 0},
+            {q: "Sandro foca a arquitetura de automação em qual métrica?", a: ["Curtidas no post", "Impacto de ROI Real", "Cores do botão"], c: 1}
+        ];
+        let qi = 0; let score = 0;
+        function initQuiz() {
+            const d = qData[qi];
+            document.getElementById('quiz-step').innerText = `ETAPA 0${qi+1}`;
+            document.getElementById('quiz-q').innerText = d.q;
+            const container = document.getElementById('quiz-opts');
+            container.innerHTML = "";
+            d.a.forEach((opt, i) => {
+                const b = document.createElement('button');
+                b.className = "btn-os text-[10px] normal-case";
+                b.innerText = opt;
+                b.onclick = () => {
+                    Array.from(container.children).forEach(child => child.disabled = true);
+                    if(i === d.c) {
+                        score += 500; beep(1000); 
+                        b.classList.add('bg-emerald-500/20', 'border-emerald-500', 'text-emerald-400');
+                        document.getElementById('quiz-points').innerText = `PONTOS: ${score.toString().padStart(4, '0')}`;
+                        qi++; 
+                        setTimeout(() => {
+                            if(qi < qData.length) {
+                                initQuiz(); 
+                            } else {
+                                container.innerHTML = "<p class='text-emerald-400 font-bold text-center w-full py-4 bg-emerald-900/20 border border-emerald-500 rounded'>Validação Técnica Aprovada!</p>";
+                                document.getElementById('quiz-q').innerText = "Análise de Perfil Concluída com Sucesso.";
+                                const qNext = document.getElementById('quiz-next');
+                                qNext.classList.remove('hidden');
+                                qNext.classList.add('btn-unlocked');
+                                qNext.innerHTML = 'ACESSO LIBERADO - AVANÇAR <i data-lucide="arrow-right"></i>';
+                                lucide.createIcons();
+                            }
+                        }, 800);
+                    } else { 
+                        beep(150, 'sawtooth'); b.classList.add('shake'); b.style.borderColor = 'red'; 
+                        setTimeout(() => {
+                            Array.from(container.children).forEach(child => child.disabled = false);
+                            b.style.borderColor = ''; b.classList.remove('shake');
+                        }, 500);
+                    }
+                };
+                container.appendChild(b);
+            });
+        }
+
+        // UIPATH ANIMATION SHOWCASE
+        function startUiPathAnim() {
+            clearInterval(uipathInterval);
+            const nodes = [document.getElementById('node-1'), document.getElementById('node-2'), document.getElementById('node-3')];
+            const lines = [document.getElementById('line-1'), document.getElementById('line-2')];
+            
+            nodes.forEach(n => { n.className = "border border-sky-500/20 p-2 text-[10px] rounded text-slate-500 w-48 text-center transition-all duration-300"; });
+            lines.forEach(l => { l.className = "w-px h-6 bg-sky-500/30 transition-all duration-300"; });
+            
+            const btn = document.getElementById('btn-uipath-next');
+            btn.classList.add('hidden'); btn.classList.remove('btn-unlocked');
+            
+            let step = 0;
+            uipathInterval = setInterval(() => {
+                if(step > 0 && step <= lines.length) lines[step-1].classList.replace('bg-sky-500/30', 'bg-emerald-500');
+                if(step > 0) {
+                    nodes[step-1].classList.replace('border-emerald-500', 'border-sky-500/50');
+                    nodes[step-1].classList.replace('bg-emerald-500/10', 'bg-sky-500/5');
+                    nodes[step-1].classList.replace('text-emerald-400', 'text-sky-300');
+                    nodes[step-1].classList.remove('shadow-lg', 'shadow-emerald-500/20');
+                }
+                if(step < nodes.length) {
+                    nodes[step].classList.replace('border-sky-500/20', 'border-emerald-500');
+                    nodes[step].classList.replace('text-slate-500', 'text-emerald-400');
+                    nodes[step].classList.replace('bg-transparent', 'bg-emerald-500/10');
+                    nodes[step].classList.add('shadow-lg', 'shadow-emerald-500/20');
+                    beep(600 + step*200, 'sine', 0.1);
+                    step++;
+                } else {
+                    clearInterval(uipathInterval);
+                    beep(1200, 'sine', 0.3);
+                    btn.classList.remove('hidden'); btn.classList.add('btn-unlocked');
+                    btn.innerHTML = 'WORKFLOW CONCLUÍDO - AVANÇAR <i data-lucide="zap"></i>';
+                    lucide.createIcons();
+                }
+            }, 1200);
+        }
+
+        // API LOGS COM AÇÃO DE CHAMAR O DESENVOLVEDOR
+        function startApiLog() {
+            clearInterval(apiInterval);
+            document.getElementById('api-status').innerText = 'EXECUTANDO...';
+            document.getElementById('api-status').className = 'text-slate-500';
+            
+            const logData = [
+                "POST /v1/orchestrator/jobs",
+                "AUTH_TOKEN: VALIDATING...",
+                "<span class='text-red-500'>[ERROR] 503 SERVICE UNAVAILABLE - TIMEOUT</span>",
+                "<span class='text-yellow-400'>[TRY-CATCH] Iniciando bloco Catch(Exception e)...</span>",
+                "<span class='text-yellow-400'>[ACTION] Falha Crítica. Chamando o Desenvolvedor Sandro...</span>",
+                "<span class='text-sky-300 ml-4'>[Sandro] Conectado remotamente. Analisando log...</span>",
+                "<span class='text-sky-300 ml-4'>[Sandro] Injetando currículo HTML no cache para Bypass...</span>",
+                "<span class='text-slate-500 ml-4'>&lt;!DOCTYPE html&gt;</span>",
+                "<span class='text-slate-500 ml-4'>&lt;html lang=\"pt-br\"&gt;</span>",
+                "<span class='text-emerald-400 ml-8'>&lt;h1&gt;Sandro Sousa dos Anjos&lt;/h1&gt;</span>",
+                "<span class='text-emerald-400 ml-8'>&lt;h2&gt;Arquiteto de Soluções RPA&lt;/h2&gt;</span>",
+                "<span class='text-slate-500 ml-4'>&lt;/html&gt;</span>",
+                "<span class='text-emerald-400'>[SUCCESS] Exceção tratada por Sandro. Sistema restaurado.</span>"
+            ];
+            
+            const container = document.getElementById('api-log');
+            const parent = document.getElementById('api-container');
+            container.innerHTML = "";
+            let idx = 0;
+            const btn = document.getElementById('btn-api-next');
+            btn.classList.add('hidden'); btn.classList.remove('btn-unlocked');
+
+            apiInterval = setInterval(() => {
+                if(document.getElementById('api').classList.contains('active')) {
+                    container.innerHTML += `<p>> ${logData[idx]}</p>`;
+                    parent.scrollTop = parent.scrollHeight; 
+                    
+                    if(idx === 2) { 
+                        beep(200, 'sawtooth', 0.2); 
+                        document.getElementById('api-status').innerText = 'FALHA DE CONEXÃO';
+                        document.getElementById('api-status').className = 'text-red-500 font-bold';
+                    } else if (idx === 4) {
+                        document.getElementById('api-status').innerText = 'AGUARDANDO SUPORTE...';
+                        document.getElementById('api-status').className = 'text-yellow-400 font-bold';
+                    } else if (idx === 12) {
+                        document.getElementById('api-status').innerText = 'SISTEMA RESTAURADO';
+                        document.getElementById('api-status').className = 'text-emerald-500 font-bold';
+                    } else {
+                        beep(400 + (idx*10), 'square', 0.02, 0.02);
+                    }
+                    
+                    idx++;
+                    if(idx >= logData.length) {
+                        clearInterval(apiInterval);
+                        beep(1000, 'sine', 0.2);
+                        btn.classList.remove('hidden'); btn.classList.add('btn-unlocked');
+                        btn.innerHTML = 'SISTEMA CORRIGIDO - AVANÇAR <i data-lucide="database"></i>';
+                        lucide.createIcons();
+                    }
+                } else clearInterval(apiInterval);
+            }, 600); 
+        }
+
+        // SQL LOGS
+        function startSqlLog() {
+            clearInterval(sqlInterval);
+            const lines = ["INSERT TB_ROI VALUES(12500)", "COMMIT TRANSACTION", "UPDATE BI_DASHBOARD SET...", "QUERY OK, 1 ROW AFFECTED"];
+            const container = document.getElementById('sql-log');
+            container.innerHTML = "";
+            let idx = 0;
+            const btn = document.getElementById('btn-sql-next');
+            btn.classList.add('hidden'); btn.classList.remove('btn-unlocked');
+
+            sqlInterval = setInterval(() => {
+                if(document.getElementById('sql').classList.contains('active')) {
+                    container.innerHTML += `<p>> [${new Date().toLocaleTimeString()}] ${lines[idx]}</p>`;
+                    idx++; beep(300, 'square', 0.02, 0.02);
+                    if(idx >= lines.length) {
+                        clearInterval(sqlInterval);
+                        beep(1000, 'sine', 0.2);
+                        btn.classList.remove('hidden'); btn.classList.add('btn-unlocked');
+                        btn.innerHTML = 'DADOS SALVOS - AVANÇAR <i data-lucide="arrow-right"></i>';
+                        lucide.createIcons();
+                    }
+                } else clearInterval(sqlInterval);
+            }, 1000);
+        }
+
+        // DECRYPT
+        document.getElementById('btn-decrypt').onclick = function() {
+            this.innerText = "DECRIPTANDO..."; beep(1200, 'sine', 0.5);
+            setTimeout(() => {
+                document.getElementById('lock-icon').innerHTML = '<i data-lucide="unlock" class="text-emerald-500 w-full h-full"></i>';
+                lucide.createIcons();
+                nav('final');
+            }, 2000);
+        };
+
+        // CHALLENGE MISSION
+        let missionScore = 0;
+const mData = [
+
+    {
+        q: "Qual o combustível principal durante um deploy tenso?",
+        a: [
+            "Café, porque milagres levam tempo",
+            "Energia do desespero",
+            "Suco detox e pensamento positivo"
+        ],
+        c: 0
+    },
+
+    {
+        q: "Quando um script enorme funciona de primeira, o mais normal é:",
+        a: [
+            "Testar de novo para garantir que não foi um delírio ou ilusão de ótica",
+            "Desconfiar porque foi fácil demais",
+            "Fechar tudo rápido antes que pare de funcionar"
+        ],
+        c: 0
+    },
+
+    {
+        q: "Para que serve a automação?",
+        a: [
+            "Ganhar tempo e evitar erro humano",
+            "Fugir de tarefas repetitivas chatas",
+            "Complicar algo que era simples"
+        ],
+        c: 0
+    },
+
+    {
+        q: "Quando um robô faz o trabalho repetitivo, o humano deve:",
+        a: [
+            "Usar o tempo para pensar em coisas mais importantes",
+            "Tomar um café e fingir que está ocupado",
+            "Refazer tudo manualmente por segurança"
+        ],
+        c: 0
+    },
+
+    {
+        q: "Uma boa automação precisa ser:",
+        a: [
+            "Confiável, clara e fácil de manter",
+            "Rápida o suficiente para não dar erro",
+            "Feita na pressa porque o prazo acabou"
+        ],
+        c: 0
+    },
+
+    {
+        q: "Se o cliente não explicou direito a regra, o melhor é:",
+        a: [
+            "Perguntar de novo até todo mundo entender",
+            "Fazer e torcer para ser isso mesmo",
+            "Descobrir no meio do caminho"
+        ],
+        c: 0
+    },
+
+    {
+        q: "Quando algo quebra em produção, o ideal é:",
+        a: [
+            "Analisar com calma antes de sair mudando tudo",
+            "Abrir o log e pedir ajuda divina",
+            "Desligar e ligar de novo rezando"
+        ],
+        c: 0
+    },
+
+    {
+        q: "O objetivo de um desenvolvedor de automação é:",
+        a: [
+            "Fazer o computador trabalhar no lugar das pessoas",
+            "Criar robôs para não ter que repetir tarefa",
+            "Automatizar até o horário do café"
+        ],
+        c: 0
+    },
+
+    {
+        q: "Antes de automatizar um processo, devemos:",
+        a: [
+            "Entender bem o que está sendo feito",
+            "Automatizar primeiro e entender depois",
+            "Descobrir no meio do erro"
+        ],
+        c: 0
+    },
+
+    {
+        q: "Quando tudo está funcionando em produção, o dev pensa:",
+        a: [
+            "Vamos monitorar… silêncio demais não é normal",
+            "Estranho… isso está bom demais",
+            "Agora posso mexer sem medo"
+        ],
+        c: 0
+    }
+
+];
+        
+        function startMission() {
+            const name = document.getElementById('player-name').value;
+            if(!name) return alert("Identifique-se, Recrutador!");
+            document.getElementById('chal-intro').classList.add('hidden');
+            document.getElementById('chal-play').classList.remove('hidden');
+            loadMission(0);
+        }
+        
+        function loadMission(idx) {
+            if(idx >= mData.length) return endMission();
+            const d = mData[idx];
+            document.getElementById('chal-q-id').innerText = `PERGUNTA 0${idx+1}`;
+            document.getElementById('chal-q').innerText = d.q;
+            const container = document.getElementById('chal-opts');
+            container.innerHTML = "";
+            
+            d.a.forEach((opt, i) => {
+                const b = document.createElement('button');
+                b.className = "btn-os text-[10px] normal-case"; 
+                b.innerText = opt;
+                
+                b.onclick = () => {
+                    Array.from(container.children).forEach(child => child.disabled = true);
+                    
+                    if(i === d.c) { 
+                        missionScore += 1000; 
+                        beep(1200); 
+                        b.classList.add('bg-emerald-500/20', 'border-emerald-500', 'text-emerald-400', 'btn-unlocked');
+                        b.innerHTML = `<i data-lucide="check-circle" class="w-4 h-4 inline-block mr-2"></i> RESPOSTA EXATA`;
+                        lucide.createIcons();
+                        document.getElementById('chal-score').innerText = `PONTOS: ${missionScore}`;
+                        
+                        setTimeout(() => loadMission(idx + 1), 1000);
+                        
+                    } else { 
+                        missionScore -= 200; 
+                        beep(200, 'sawtooth'); 
+                        b.classList.add('shake');
+                        b.style.borderColor = 'red';
+                        document.getElementById('chal-score').innerText = `PONTOS: ${missionScore}`;
+                        
+                        setTimeout(() => {
+                            Array.from(container.children).forEach(child => child.disabled = false);
+                            b.style.borderColor = '';
+                            b.classList.remove('shake');
+                        }, 500);
+                    }
+                };
+                container.appendChild(b);
+            });
+        }
+        
+        function endMission() {
+            const name = document.getElementById('player-name').value;
+            let rank = JSON.parse(localStorage.getItem('sandro_rank_fun')) || [];
+            rank.push({name, score: missionScore});
+            rank.sort((a,b) => b.score - a.score);
+            localStorage.setItem('sandro_rank_fun', JSON.stringify(rank.slice(0, 5)));
+            nav('ranking'); 
+            showRank();
+        }
+        
+        function showRank() {
+            const rank = JSON.parse(localStorage.getItem('sandro_rank_fun')) || [];
+            document.getElementById('leader-list').innerHTML = rank.map((r, i) => `
+                <div class="flex justify-between text-[10px] border-b border-slate-800 pb-2">
+                    <span class="text-sky-400">#0${i+1} ${r.name}</span>
+                    <span class="text-emerald-400">${r.score} PTS</span>
+                </div>
+            `).join('');
+        }
+
+        lucide.createIcons();
+    </script>
+</body>
+</html>
