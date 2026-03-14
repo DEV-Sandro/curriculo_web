@@ -4,6 +4,16 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>SandroOS v5.5 | Command Center do Arquiteto</title>
+    
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-NYT2J4E3D9"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+
+      // Configuração inicial
+      gtag('config', 'G-NYT2J4E3D9');
+    </script>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/lucide@latest"></script>
     <style>
@@ -99,6 +109,7 @@
         <p style="font-size: 10pt; color: #374151; margin-bottom: 5px;"><strong>MBA em Data Science & Analytics</strong><br>Universidade de São Paulo (USP) | 2022 – 2024</p>
         <p style="font-size: 10pt; color: #374151; margin-bottom: 20px;"><strong>Tecnólogo em Análise e Desenvolvimento de Sistemas</strong><br>UNIPAR | 2019 – 2022</p>
     </div>
+
     <div class="progress-fixed"><div id="progress-val"></div></div>
 
     <section id="boot" class="screen active">
@@ -228,10 +239,10 @@
         <h2 class="text-2xl font-bold mb-4 text-emerald-400 glow uppercase">Conexão Estabelecida</h2>
         <p class="text-[10px] text-slate-400 mb-10 uppercase tracking-widest">Aberto para novas Missões // Remoto ou Híbrido</p>
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 w-full max-w-md">
-            <a href="https://br.linkedin.com/in/dev-sandro-sousa" target="_blank" class="btn-os justify-center"><i data-lucide="linkedin"></i> LinkedIn</a>
-            <a href="mailto:sandrosousa094@gmail.com" class="btn-os justify-center"><i data-lucide="mail"></i> Email</a>
-            <a href="https://wa.me/5593984162285" target="_blank" class="btn-os justify-center border-emerald-500"><i data-lucide="message-circle"></i> WhatsApp</a>
-            <button onclick="window.print()" class="btn-os justify-center"><i data-lucide="file-text"></i> Export Dossier</button>
+            <a href="https://br.linkedin.com/in/dev-sandro-sousa" target="_blank" onclick="gtag('event', 'click_linkedin');" class="btn-os justify-center"><i data-lucide="linkedin"></i> LinkedIn</a>
+            <a href="mailto:sandrosousa094@gmail.com" onclick="gtag('event', 'click_email');" class="btn-os justify-center"><i data-lucide="mail"></i> Email</a>
+            <a href="https://wa.me/5593984162285" target="_blank" onclick="gtag('event', 'click_whatsapp');" class="btn-os justify-center border-emerald-500"><i data-lucide="message-circle"></i> WhatsApp</a>
+            <button onclick="gtag('event', 'export_dossier'); window.print();" class="btn-os justify-center"><i data-lucide="file-text"></i> Export Dossier</button>
         </div>
         <div class="mt-16 glass p-6 text-center w-full max-w-sm">
             <h3 class="text-xs font-bold mb-4">DESAFIO DO RANKING</h3>
@@ -277,7 +288,7 @@
             o.start(); o.stop(audio.currentTime + d);
         }
 
-        // NAVIGATION
+        // NAVIGATION & GA4 TRACKING
         const screens = ['boot', 'intro', 'roi', 'quiz', 'uipath', 'api', 'sql', 'history', 'contact', 'final', 'challenge', 'ranking'];
         let uipathInterval, apiInterval, sqlInterval;
 
@@ -289,6 +300,12 @@
             document.getElementById('progress-val').style.width = `${((idx+1)/screens.length)*100}%`;
             beep(400 + idx*50);
             window.scrollTo(0,0);
+            
+            // GA4: Rastrea tela acessada
+            gtag('event', 'screen_view', {
+                'app_name': 'SandroOS',
+                'screen_name': id
+            });
             
             if(id === 'quiz') initQuiz();
             if(id === 'uipath') startUiPathAnim();
@@ -317,7 +334,10 @@
             }
         }
         typeBoot();
-        document.getElementById('btn-start').onclick = () => nav('intro');
+        document.getElementById('btn-start').onclick = () => {
+            gtag('event', 'boot_complete');
+            nav('intro');
+        };
 
         // ROI SIMULATOR
         let roi = 0;
@@ -336,6 +356,7 @@
                     nextBtn.classList.add('btn-unlocked');
                     nextBtn.innerHTML = 'PROCESSO CONCLUÍDO - AVANÇAR <i data-lucide="arrow-right"></i>';
                     lucide.createIcons();
+                    gtag('event', 'roi_sim_complete');
                 }
             }
         };
@@ -375,6 +396,7 @@
                                 qNext.classList.add('btn-unlocked');
                                 qNext.innerHTML = 'ACESSO LIBERADO - AVANÇAR <i data-lucide="arrow-right"></i>';
                                 lucide.createIcons();
+                                gtag('event', 'tech_quiz_complete', {'score': score});
                             }
                         }, 800);
                     } else { 
@@ -518,112 +540,113 @@
             setTimeout(() => {
                 document.getElementById('lock-icon').innerHTML = '<i data-lucide="unlock" class="text-emerald-500 w-full h-full"></i>';
                 lucide.createIcons();
+                gtag('event', 'contacts_decrypted');
                 nav('final');
             }, 2000);
         };
 
-        // CHALLENGE MISSION
+        // CHALLENGE MISSION (Divertido / Personalizado)
         let missionScore = 0;
 const mData = [
 
-    {
-        q: "Qual o combustível principal durante um deploy tenso?",
+    { 
+        q: "Qual o combustível principal durante um deploy tenso?", 
         a: [
-            "Café, porque milagres levam tempo",
             "Energia do desespero",
+            "Café, porque milagres levam tempo",
             "Suco detox e pensamento positivo"
-        ],
-        c: 0
+        ], 
+        c: 1 
     },
 
-    {
-        q: "Quando um script enorme funciona de primeira, o mais normal é:",
+    { 
+        q: "Quando um script enorme funciona de primeira, o mais normal é:", 
         a: [
+            "Fechar tudo rápido antes que pare de funcionar",
             "Testar de novo para garantir que não foi um delírio ou ilusão de ótica",
-            "Desconfiar porque foi fácil demais",
-            "Fechar tudo rápido antes que pare de funcionar"
-        ],
-        c: 0
+            "Desconfiar porque foi fácil demais"
+        ], 
+        c: 1 
     },
 
-    {
-        q: "Para que serve a automação?",
+    { 
+        q: "Para que serve a automação?", 
         a: [
+            "Complicar algo que era simples",
             "Ganhar tempo e evitar erro humano",
-            "Fugir de tarefas repetitivas chatas",
-            "Complicar algo que era simples"
-        ],
-        c: 0
+            "Fugir de tarefas repetitivas chatas"
+        ], 
+        c: 1 
     },
 
-    {
-        q: "Quando um robô faz o trabalho repetitivo, o humano deve:",
+    { 
+        q: "Quando um robô faz o trabalho repetitivo, o humano deve:", 
         a: [
-            "Usar o tempo para pensar em coisas mais importantes",
             "Tomar um café e fingir que está ocupado",
-            "Refazer tudo manualmente por segurança"
-        ],
-        c: 0
+            "Refazer tudo manualmente por segurança",
+            "Usar o tempo para pensar em coisas mais importantes"
+        ], 
+        c: 2 
     },
 
-    {
-        q: "Uma boa automação precisa ser:",
+    { 
+        q: "Uma boa automação precisa ser:", 
         a: [
-            "Confiável, clara e fácil de manter",
             "Rápida o suficiente para não dar erro",
-            "Feita na pressa porque o prazo acabou"
-        ],
-        c: 0
+            "Feita na pressa porque o prazo acabou",
+            "Confiável, clara e fácil de manter"
+        ], 
+        c: 2 
     },
 
-    {
-        q: "Se o cliente não explicou direito a regra, o melhor é:",
+    { 
+        q: "Se o cliente não explicou direito a regra, o melhor é:", 
         a: [
             "Perguntar de novo até todo mundo entender",
             "Fazer e torcer para ser isso mesmo",
             "Descobrir no meio do caminho"
-        ],
-        c: 0
+        ], 
+        c: 0 
     },
 
-    {
-        q: "Quando algo quebra em produção, o ideal é:",
+    { 
+        q: "Quando algo quebra em produção, o ideal é:", 
         a: [
-            "Analisar com calma antes de sair mudando tudo",
             "Abrir o log e pedir ajuda divina",
+            "Analisar com calma antes de sair mudando tudo",
             "Desligar e ligar de novo rezando"
-        ],
-        c: 0
+        ], 
+        c: 1 
     },
 
-    {
-        q: "O objetivo de um desenvolvedor de automação é:",
+    { 
+        q: "O objetivo de um desenvolvedor de automação é:", 
         a: [
-            "Fazer o computador trabalhar no lugar das pessoas",
             "Criar robôs para não ter que repetir tarefa",
-            "Automatizar até o horário do café"
-        ],
-        c: 0
+            "Automatizar até o horário do café",
+            "Fazer o computador trabalhar no lugar das pessoas"
+        ], 
+        c: 2 
     },
 
-    {
-        q: "Antes de automatizar um processo, devemos:",
+    { 
+        q: "Antes de automatizar um processo, devemos:", 
         a: [
-            "Entender bem o que está sendo feito",
             "Automatizar primeiro e entender depois",
+            "Entender bem o que está sendo feito",
             "Descobrir no meio do erro"
-        ],
-        c: 0
+        ], 
+        c: 1 
     },
 
-    {
-        q: "Quando tudo está funcionando em produção, o dev pensa:",
+    { 
+        q: "Quando tudo está funcionando em produção, o dev pensa:", 
         a: [
+            "Agora posso mexer sem medo",
             "Vamos monitorar… silêncio demais não é normal",
-            "Estranho… isso está bom demais",
-            "Agora posso mexer sem medo"
-        ],
-        c: 0
+            "Estranho… isso está bom demais"
+        ], 
+        c: 1 
     }
 
 ];
@@ -631,6 +654,9 @@ const mData = [
         function startMission() {
             const name = document.getElementById('player-name').value;
             if(!name) return alert("Identifique-se, Recrutador!");
+            
+            gtag('event', 'fun_mission_start', {'player': name});
+            
             document.getElementById('chal-intro').classList.add('hidden');
             document.getElementById('chal-play').classList.remove('hidden');
             loadMission(0);
@@ -682,6 +708,8 @@ const mData = [
         
         function endMission() {
             const name = document.getElementById('player-name').value;
+            gtag('event', 'fun_mission_complete', {'player': name, 'score': missionScore});
+            
             let rank = JSON.parse(localStorage.getItem('sandro_rank_fun')) || [];
             rank.push({name, score: missionScore});
             rank.sort((a,b) => b.score - a.score);
