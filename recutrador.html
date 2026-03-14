@@ -361,12 +361,33 @@
             }
         };
 
-        // QUIZ SYSTEM TÉCNICO
-        const qData = [
-            {q: "Qual ferramenta principal Sandro usa como Arquiteto?", a: ["UiPath", "Excel", "Photoshop"], c: 0},
-            {q: "Onde o Sandro finalizou seu MBA em Data Science?", a: ["USP", "MIT", "Coursera"], c: 0},
-            {q: "Sandro foca a arquitetura de automação em qual métrica?", a: ["Curtidas no post", "Impacto de ROI Real", "Cores do botão"], c: 1}
-        ];
+const qData = [
+    {
+        q: "Qual é a principal ferramenta que o Sandro usa para criar robôs que trabalham sozinhos?", 
+        a: ["UiPath", "Automation Anywhere", "Blue Prism"], 
+        c: 0
+    },
+    {
+        q: "Em qual instituição o Sandro se especializou em análise de dados (MBA em Data Science)?", 
+        a: ["USP", "PUC", "UEPA"], 
+        c: 0
+    },
+    {
+        q: "Ao criar um projeto, qual é a prioridade do Sandro para o cliente?", 
+        a: ["Likes em redes sociais", "Retorno financeiro real (ROI)", "Apenas beleza do sistema"], 
+        c: 1
+    },
+    {
+        q: "Qual foi o curso de graduação que deu a base tecnológica para o Sandro?", 
+        a: ["Análise e Desenvolvimento de Sistemas (ADS)", "Administração", "Marketing Digital"], 
+        c: 0
+    },
+    {
+        q: "Como o Sandro conquistou sua primeira graduação no ensino superior?", 
+        a: ["Pagando mensalidades", "Através de uma bolsa de 100%", "Financiamento estudantil"], 
+        c: 1
+    }
+];
         let qi = 0; let score = 0;
         function initQuiz() {
             const d = qData[qi];
